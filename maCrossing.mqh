@@ -18,8 +18,16 @@
 
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
+string maCrossingLast(string tmpLastCrossing = "NULL") {
+   static string lastCrossing  = "NULL";
+   
+   if (tmpLastCrossing == "UP" || tmpLastCrossing == "DOWN") lastCrossing = tmpLastCrossing;
+   return lastCrossing;
+   }
 
 string maCrossing(int fastPeriod, int slowPeriod) {
+   
+
 
    double ma_SlowValues[];
    double ma_FastValues[];
@@ -68,14 +76,18 @@ string maCrossing(int fastPeriod, int slowPeriod) {
          datetime time = iTime(_Symbol, PERIOD_M1, 1);
          double price = iClose(_Symbol, PERIOD_M1, 1);
          
-               if (CrossingUP == CrossingDW) return "NULL";
+               if (CrossingUP == CrossingDW) {
+                  return "NULL";
+               }
          else  if (CrossingUP) {
             PlaceArrow(time, price, true);
+            maCrossingLast("UP");
             return "UP";
            }
          else  if (CrossingDW) {
             PlaceArrow(time, price, false);
-            return "DOWN";
+            maCrossingLast("DOWN");
+           return "DOWN";
            }
          else return "NULL";      
       }
