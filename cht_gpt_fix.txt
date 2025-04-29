@@ -1,0 +1,111 @@
+string maCrossingLast(string tmpLastCrossing = "") {
+   static string lastCrossing = "NULL";
+   
+   if (tmpLastCrossing == "UP" || tmpLastCrossing == "DOWN") 
+       lastCrossing = tmpLastCrossing;
+   
+   return lastCrossing;
+}
+
+string maCrossing(int fastPeriod, int slowPeriod) {
+   double ma_SlowValues[];
+   double ma_FastValues[];
+
+   int ma_SlowHandle = iMA(_Symbol, _Period, slowPeriod, 0, MODE_SMA , PRICE_CLOSE);
+   int ma_FastHandle = iMA(_Symbol, _Period, fastPeriod, 0, MODE_SMA , PRICE_CLOSE);
+
+   if ((ma_SlowHandle == INVALID_HANDLE) || (ma_FastHandle == INVALID_HANDLE))  {
+      string errorMsg = "Error creating MA handle: " + IntegerToString(GetLastError());
+      Print(errorMsg);
+      return errorMsg;  // Return error message for better debugging.
+   }
+
+   ArraySetAsSeries(ma_SlowValues, true);
+   ArraySetAsSeries(ma_FastValues, true);
+
+   if ((CopyBuffer(ma_SlowHandle, 0, 0, 10, ma_SlowValues) <= 0) || 
+       (CopyBuffer(ma_FastHandle, 0, 0, 10, ma_FastValues) <= 0)) {
+      string errorMsg = "Error copying MA buffer: " + IntegerToString(GetLastError());
+      Print(errorMsg);
+      return errorMsg;  // Improved error message.
+   }
+
+   bool CrossingDW = (ma_FastValues[0] > ma_SlowValues[0]) && (ma_FastValues[1] < ma_SlowValues[1]);
+   bool CrossingUP = (ma_FastValues[0] < ma_SlowValues[0]) && (ma_FastValues[1] > ma_SlowValues[1]);
+
+   if (CrossingUP || CrossingDW) {   
+      datetime time = iTime(_Symbol, PERIOD_M1, 1);
+      double price = iClose(_Symbol, PERIOD_M1, 1);
+
+      if (CrossingUP) {
+         PlaceArrow(time, price, true);
+         maCrossingLast("UP");
+         return "UP";
+      } else if (CrossingDW) {
+         PlaceArrow(time, price, false);
+         maCrossingLast("DOWN");
+         return "DOWN";
+      }
+   }
+
+   if (ma_SlowHandle != INVALID_HANDLE) IndicatorRelease(ma_SlowHandle);
+   if (ma_FastHandle != INVALID_HANDLE) IndicatorRelease(ma_FastHandle);
+
+   return "NULL";
+}
+
+
+
+######################################################################################################
+
+
+// Define a structure to handle the candle time and result for each timeframe.
+struct TimeframeInfo {
+   datetime lastCandleTime;
+   bool isNewCandle;
+};
+
+// Store information for each timeframe in a map.
+TimeframeInfo timeframeData[];
+
+void OnInit_OnTick_IsNewCandle() {
+   // Initialize data for each timeframe.
+   for(int i = 0; i < ArraySize(timeframeData); i++) {
+      timeframeData[i].lastCandleTime = 0;
+      timeframeData[i].isNewCandle = false;
+   }
+}
+
+bool IsNewCandle(ENUM_TIMEFRAMES timeFrame) {
+   datetime currTime = iTime(_Symbol, timeFrame, 0);
+   
+   int index = GetTimeFrameIndex(timeFrame);  // Map timeframes to indices
+   
+   if(index == -1) return false;  // Invalid timeframe.
+
+   // If the candle time has changed, it's a new candle.
+   if(timeframeData[index].lastCandleTime != currTime) {
+      timeframeData[index].lastCandleTime = currTime;
+      timeframeData[index].isNewCandle = true;
+      return true;
+   } else {
+      timeframeData[index].isNewCandle = false;
+   }
+
+   return false;
+}
+
+// Helper function to map ENUM_TIMEFRAMES to index in the array.
+int GetTimeFrameIndex(ENUM_TIMEFRAMES timeFrame) {
+   switch (timeFrame) {
+      case PERIOD_H4:  return 0;
+      case PERIOD_H1:  return 1;
+      case PERIOD_M30: return 2;
+      case PERIOD_M15: return 3;
+      case PERIOD_M5:  return 4;
+      case PERIOD_M1:  return 5;
+      default: return -1;  // Return -1 for unknown timeframes.
+   }
+}
+
+
