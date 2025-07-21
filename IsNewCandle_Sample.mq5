@@ -13,7 +13,6 @@
 
       
 int OnInit() {
-   // OnInit_OnTick_IsNewCandle();
    OnInit_IsNewCandle();
    return(INIT_SUCCEEDED);
 }
@@ -23,26 +22,16 @@ ulong j = 0;
 
 //---------------------------------+
 void OnTick() {
-   // OnInit_OnTick_IsNewCandle();
-
-   // OnTick_IsNewCandle();
-
+   
     j++;
-
    if ( IsNewCandle(PERIOD_M1) ) { 
-        x++;
+      x++;
       Log("Tick = " + IntegerToString(j) + " ; Min-Count = " + IntegerToString(x) + " ; M1 - New Candle Detected ");
- 
-   }
+    }
 
    if ( IsNewCandle(PERIOD_M5) ) { 
-
       Log("Tick = " + IntegerToString(j) + " ; Min-Count = " + IntegerToString(x) + " ; M5 - New Candle Detected");
- 
    }
-
-
-
 //+--------------------------------+   
  
 }

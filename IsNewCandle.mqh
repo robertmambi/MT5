@@ -51,30 +51,29 @@ bool IsNewCandle(ENUM_TIMEFRAMES tf) {
    return false;
 }
 
-//+------------------------------------------------------------------+
-//| Example: Call this from OnTick() or OnTimer()                    |
-//+------------------------------------------------------------------+
-void OnTick_IsNewCandle() {
-   for(int i = 0; i < TF_COUNT; i++) {
-      ENUM_TIMEFRAMES tf = (ENUM_TIMEFRAMES)timeframes[i];
-      if(IsNewCandle(tf)) {
-         Print("🕒 New candle on ", EnumToString(tf),
-               " at ", TimeToString(tfData[i].lastCandleTime, TIME_DATE|TIME_MINUTES));
-      }
-   }
-}
+// //+------------------------------------------------------------------+
+// //| Example: Call this from OnTick() or OnTimer()                    |
+// //+------------------------------------------------------------------+
+// void OnTick_IsNewCandle() {
+//    for(int i = 0; i < TF_COUNT; i++) {
+//       ENUM_TIMEFRAMES tf = (ENUM_TIMEFRAMES)timeframes[i];
+//       if(IsNewCandle(tf)) {
+//          Print("🕒 New candle on ", EnumToString(tf),
+//                " at ", TimeToString(tfData[i].lastCandleTime, TIME_DATE|TIME_MINUTES));
+//       }
+//    }
+// }
 
 //+------------------------------------------------------------------+
 //| Initialization if needed                                         |
 //+------------------------------------------------------------------+
-int OnInit_IsNewCandle() {
+void OnInit_IsNewCandle() {
    // Preload the current candle times so false triggers are avoided
    for(int i = 0; i < TF_COUNT; i++) {
       tfData[i].lastCandleTime = iTime(_Symbol, (ENUM_TIMEFRAMES)timeframes[i], 0);
       tfData[i].prevCandleTime = tfData[i].lastCandleTime;
       tfData[i].isNewCandle = false;
    }
-   return INIT_SUCCEEDED;
 }
 
 
