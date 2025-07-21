@@ -29,15 +29,17 @@ void OnTick() {
    OnInit_OnTick_IsNewCandle();
 
 
-   if ( IsNewCandle(PERIOD_M5) ) { 
+   if ( IsNewCandle(PERIOD_M1) ) { 
 
-      string crossover = maCrossing(20,50);
-      
-      if(crossover == "UP" || crossover == "DOWN") Log("MA Crossover detected");
+      Log("M1 - New Candle Detected");
  
    }
 
+   if ( IsNewCandle(PERIOD_M5) ) { 
 
+      Log("M5 - New Candle Detected");
+ 
+   }
 
 
 
