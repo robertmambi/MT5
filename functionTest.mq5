@@ -10,106 +10,142 @@
 
 #include "IsNewCandle.mqh";
 #include "common.mqh";
-#include "maCrossing.mqh";
+#include "Orders.mqh";
+#include "DirectionByCandle.mqh";
+#include "AccountInfo.mqh"
 
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
 
-
-      
 int OnInit() {
-   OnInit_OnTick_IsNewCandle();
+   OnInit_IsNewCandle();
    return(INIT_SUCCEEDED);
 }
 
+
 int x = 0;
+ulong j = 0;
 
 //---------------------------------+
+
+// UP
+double PriceUP    = 0;
+datetime TimeUP;
+bool TrendingUP   = false;
+bool CheckMaUP    = false;
+bool EntryPointUP = false;
+
+// DW
+double PriceDW    = 0;
+datetime TimeDW;
+bool TrendingDW   = false;
+bool CheckMaDW    = false;
+bool EntryPointDW = false;
+
+// Both
+int BuySell = 0;
+bool OpenOrders = false;
+
+
 void OnTick() {
-   OnInit_OnTick_IsNewCandle();
+
+   OpenOrders   = false;
+   
+   TrendingUP   = false;
+   CheckMaUP    = false;
+   EntryPointUP = false;
+
+   TrendingDW   = false;
+   CheckMaDW    = false;
+   EntryPointDW = false;
 
 
-   if ( IsNewCandle(PERIOD_M1) ) { 
 
-      Log("M1 - New Candle Detected");
- 
+   if (BuySell == 0) {
+
+      //UP   
+      GetCurrentPrice(PriceUP,TimeUP,true);
+      EntryPointUP =     (PriceUP < GetMACurrentValue(Global_ma0, PERIOD_M1))
+                    &&  (PriceUP > GetMACurrentValue(Global_ma2, PERIOD_M1));
+      if(EntryPointUP) BuySell=1;
+      
+      //DW
+      GetCurrentPrice(PriceDW,TimeDW,false);
+      EntryPointDW =     (PriceDW > GetMACurrentValue(Global_ma0, PERIOD_M1))
+                    &&  (PriceDW < GetMACurrentValue(Global_ma2, PERIOD_M1));
+      if(EntryPointDW) BuySell=2;      
+      
    }
 
-   if ( IsNewCandle(PERIOD_M5) ) { 
+      j++;
+   
+   if ( IsNewCandle(PERIOD_M1) ) {
+   
+      x++;   
+      
 
-      Log("M5 - New Candle Detected");
- 
-   }
+      Log("Tick"+IntegerToString(j)+"M1-"+IntegerToString(x) + " ==================================================================");
 
 
+      TrendingDW =    (BoolToUpDown(IsTrending(_Symbol, PERIOD_M1)) == "DW")
+                   && (BoolToUpDown(IsTrending(_Symbol, PERIOD_M5)) == "DW");
+      CheckMaDW  = (CheckMAConditions(PERIOD_M1) == "DW");
+      
+      TrendingUP =    (BoolToUpDown(IsTrending(_Symbol, PERIOD_M1)) == "UP")
+                   && (BoolToUpDown(IsTrending(_Symbol, PERIOD_M5)) == "UP");
+      CheckMaUP  = (CheckMAConditions(PERIOD_M1) == "UP");      OpenOrders = (CountTrades() == 0);
+      
+//      Log("TrendingUp=" + TrendingUp);
+//      Log("CheckMaUp=" + CheckMaUp);
+//      Log("OpenOrders=" + OpenOrders);
+//      Log("BuySell=" + BuySell);
+//      
+//      Log("PriceUp=" + PriceUp);
+//      Log("GetMACurrentValue-ma0=" + GetMACurrentValue(Global_ma0, PERIOD_M1));
+//      Log("GetMACurrentValue-ma2=" + GetMACurrentValue(Global_ma2, PERIOD_M1));
+      
+      if( (BuySell == 1) && TrendingUP && CheckMaUP && OpenOrders) {
+      
+         double   buy_price  = 0;
+         datetime buy_time = NULL;
+         GetCurrentPrice(buy_price,buy_time,true);
+         PlaceArrow(buy_time, buy_price, true) ;
+         
+         //datetime buy_time =;
+         Log("---------------------------------------");      
+         Log("BUY - BUY - BUY - BUY - BUY - BUY - BUY");
+         Log("---------------------------------------");         
+         
+      }
+      
+      if( (BuySell == 2) && TrendingDW && CheckMaDW && OpenOrders) {
+      
+         double   buy_price  = 0;
+         datetime buy_time = NULL;
+         GetCurrentPrice(buy_price,buy_time,false);
+         PlaceArrow(buy_time, buy_price, false) ;
+         
+         //datetime buy_time =;
+         Log("---------------------------------------");      
+         Log("SELL - SELL - SELL- SELL - SELL - SELL - SELL");
+         Log("---------------------------------------");         
+         
+      }
 
-//+--------------------------------+   
- 
+      Log("Ticket = " + IntegerToString(j) + " M1-Loop=" + IntegerToString(x));
+      Log("CountTrades = " + IntegerToString(CountTrades()));
+      Log("BuySell = " + BuySell);     
+      Log("CheckMAConditions M1= " + CheckMAConditions(PERIOD_M1));
+      Log("IsTrending_M_1_5_15_30 = " + IsTrending_M_1_5_15_30());
+      Log(
+           BoolToUpDown(IsTrending(_Symbol, PERIOD_M1))  + " "
+         + BoolToUpDown(IsTrending(_Symbol, PERIOD_M5))  + " "
+         + BoolToUpDown(IsTrending(_Symbol, PERIOD_M15)) + " "
+         + BoolToUpDown(IsTrending(_Symbol, PERIOD_M30))
+         );
+         
+      if(BuySell == 1) BuySell = 0;
+      if(BuySell == 2) BuySell = 0;        
+    }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-////+----------------------------------------------+
-//// check Target bars from a trackedBatTime;
-////+----------------------------------------------+
-
-//
-//input int BarToTrack = 1;
-//
-//datetime trackedBarTime;
-//
-//void OnInit()
-//{
-//   OnInit_OnTick_IsNewCandle();
-//   
-//      trackedBarTime = iTime(_Symbol, PERIOD_CURRENT, BarToTrack);
-//      Print("Tracking bar with open time: ", TimeToString(trackedBarTime));
-//}
-
-
-//
-
-//void OnTick()
-//{
-//
-//   OnInit_OnTick_IsNewCandle();
-//   
-//  if (IsNewCandle(PERIOD_M1)) {
-//  
-//   Sleep(3);
-//   
-//      datetime timeArray[];
-//      //int totalBars = Bars(_Symbol, PERIOD_CURRENT);
-//      int BarsCount = Bars(_Symbol, PERIOD_CURRENT,trackedBarTime,TimeCurrent());
-//      int IndexHighest = iHighest(_Symbol,PERIOD_CURRENT,MODE_CLOSE,BarsCount,1);
-//      double IndexHighestPrice = iHigh(_Symbol,PERIOD_CURRENT,IndexHighest);
-//
-//       Log("trackedBarTime=" + TimeToString(iTime(_Symbol, PERIOD_CURRENT, IndexHighest)) + " BarsCount=" + IntegerToString(BarsCount));
-//       Log("IndexHighest=" + IntegerToString(IndexHighest) + " IndexHighestPrice=" + DoubleToString(IndexHighestPrice,2));
-//     
-//      //int copied = CopyTime(_Symbol, PERIOD_CURRENT, 0, totalBars, timeArray);
-//      
-//      //if(copied > 0)
-//      //{
-//      //   int barIndex = ArrayBsearch(timeArray, trackedBarTime);
-//      //   if(barIndex >= 0 && barIndex < copied && timeArray[barIndex] == trackedBarTime)
-//      //   {
-//      //      double closePrice = iClose(_Symbol, PERIOD_CURRENT, barIndex);
-//      //      Log("Tracked bar (time: "+ TimeToString(trackedBarTime) + " ) is now at index " + IntegerToString(barIndex) + ", Close price: " + DoubleToString(closePrice, 5));
-//      //   }
-//      //   else
-//      //   {
-//      //      Log("Tracked bar not found in current history.");
-//      //   }
-//      //}
-//   }
-//}
