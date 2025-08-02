@@ -249,3 +249,27 @@ double SurfaceBetweenMA(string symbol, ENUM_TIMEFRAMES tf, int period = 100)
 
    return area;
 }
+
+
+double GetParabolicSAR(string symbol, ENUM_TIMEFRAMES timeframe, int shift = 1, double step = 0.015, double max = 0.005)
+{
+// step/max = 0.015/0.005
+// step/max = 0.02/0.002
+
+   int handle = iSAR(symbol, timeframe, step, max);
+
+   if (handle == INVALID_HANDLE)
+   {
+      Print("Failed to create SAR handle: ", GetLastError());
+      return EMPTY_VALUE;
+   }
+
+   double sar[];
+   if (CopyBuffer(handle, 0, shift, 1, sar) <= 0)
+   {
+      Print("Failed to copy SAR data: ", GetLastError());
+      return EMPTY_VALUE;
+   }
+
+   return sar[0];
+}

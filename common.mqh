@@ -3,7 +3,10 @@
 #property version   "1.00"
 
 
-
+//BUY  -> ASK + TP (Price)
+//BUY  -> BID - SL
+//SELL -> Bid - TP (price)
+//SELL -> ASK + SL
 
 
 //##################################################################
