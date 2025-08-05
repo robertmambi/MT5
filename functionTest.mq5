@@ -14,10 +14,16 @@
 #include "DirectionByCandle.mqh";
 #include "AccountInfo.mqh"
 
+
+
+
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
 
 int OnInit() {
+   Log("############################################################################");
+   Log("Version 2.0.6");
+   Log("############################################################################");
    OnInit_IsNewCandle();
    return(INIT_SUCCEEDED);
 }
@@ -29,17 +35,21 @@ ulong j = 0;
 //---------------------------------+
 
 // UP
+bool AllUP = false;
 double PriceUP    = 0;
 datetime TimeUP;
-bool TrendingUP   = false;
+//bool TrendingUP   = false;
 bool CheckMaUP    = false;
+bool CheckMASlUP  = false;
 static bool EntryPointUP = false;
 
 // DW
+bool AllDW = false;
 double PriceDW    = 0;
 datetime TimeDW;
-bool TrendingDW   = false;
+//bool TrendingDW   = false;
 bool CheckMaDW    = false;
+bool CheckMASlDW  = false;
 static bool EntryPointDW = false;
 
 // Both
@@ -51,11 +61,11 @@ void OnTick() {
 
    OpenOrders   = false;
    
-   TrendingUP   = false;
-   CheckMaUP    = false;
-
-   TrendingDW   = false;
-   CheckMaDW    = false;
+//   TrendingUP   = false;
+//   CheckMaUP    = false;
+//
+//   TrendingDW   = false;
+//   CheckMaDW    = false;
 
    double OCHLopen  = 0;
    double OCHLclose = 0;
@@ -66,37 +76,25 @@ void OnTick() {
    
    //UP    
    if (!EntryPointUP) {
-      EntryPointUP =    (OCHLlow < GetMACurrentValue(Global_ma0, PERIOD_M1))
-                    &&  (OCHLlow > GetMACurrentValue(Global_ma3, PERIOD_M1))
-                    &&  (OCHLopen > OCHLclose);
+      EntryPointUP =  ((OCHLlow-1) < GetMACurrentValue(Global_ma0, PERIOD_M5)) && (OCHLopen > OCHLclose);
+      
       if(EntryPointUP) {
-         BuySell=1;
-         //Log("BuySell=1:Open/Close=" + DoubleToString(OCHLopen,2) + "/" + DoubleToString(OCHLclose,2));
+         //BuySell=1;
+         Log("BuySell=1:Open/Close=" + DoubleToString(OCHLopen,2) + "/" + DoubleToString(OCHLclose,2));
       }
      }
      
    //DW
    if (!EntryPointDW) {      
-      EntryPointDW =    (OCHLhigh  > GetMACurrentValue(Global_ma0, PERIOD_M1))
-                    &&  (OCHLhigh  < GetMACurrentValue(Global_ma3, PERIOD_M1))
+      EntryPointDW =    ((OCHLhigh+1) > GetMACurrentValue(Global_ma0, PERIOD_M5))
                     &&  (OCHLopen < OCHLclose);
       if(EntryPointDW) {
-         BuySell=2; 
-         //Log("BuySell=2:Open/Close=" + DoubleToString(OCHLopen,2) + "/" + DoubleToString(OCHLclose,2));
+         //BuySell=2; 
+         Log("BuySell=2:Open/Close=" + DoubleToString(OCHLopen,2) + "/" + DoubleToString(OCHLclose,2));
         }
    }
    
-//      GetCurrentPrice(PriceUP,PriceDW,TimeUP);
-//      //UP   
-//      EntryPointUP =     (PriceUP < GetMACurrentValue(Global_ma0, PERIOD_M1))
-//                    &&  (PriceUP > GetMACurrentValue(Global_ma3, PERIOD_M1));
-//      if(EntryPointUP) BuySell=1;
-//      
-//      //DW
-//      EntryPointDW =     (PriceDW > GetMACurrentValue(Global_ma0, PERIOD_M1))
-//                    &&  (PriceDW < GetMACurrentValue(Global_ma3, PERIOD_M1));
-//      if(EntryPointDW) BuySell=2;      
-      
+    
   
 
       j++;
@@ -105,17 +103,15 @@ void OnTick() {
    
       x++;   
       
-      //Log("_Point=" + DoubleToString(_Point,2));
-      //Log("Tick"+IntegerToString(j)+"M1-"+IntegerToString(x) + " ==================================================================");
+      CheckMASlUP = CheckMASlope(20, PERIOD_M5, "UP",  0, 5, 1);
+      CheckMASlDW = CheckMASlope(20, PERIOD_M5, "DW",  0, 5, 1);
+      CheckMaDW  =  CheckMAConditions(PERIOD_M5, "DW");
+      CheckMaUP  =  CheckMAConditions(PERIOD_M5, "UP");
+      OpenOrders = (CountTrades() == 0);
 
 
-      TrendingDW =    (BoolToUpDown(IsTrending(_Symbol, PERIOD_M1)) == "DW")
-                   && (BoolToUpDown(IsTrending(_Symbol, PERIOD_M5)) == "DW");
-      CheckMaDW  = (CheckMAConditions(PERIOD_M1) == "DW");
-      
-      TrendingUP =    (BoolToUpDown(IsTrending(_Symbol, PERIOD_M1)) == "UP")
-                   && (BoolToUpDown(IsTrending(_Symbol, PERIOD_M5)) == "UP");
-      CheckMaUP  = (CheckMAConditions(PERIOD_M1) == "UP");      OpenOrders = (CountTrades() == 0);
+      //AllUP = EntryPointUP && TrendingUP && CheckMaUP && OpenOrders;
+      //AllDW = EntryPointDW && TrendingDW && CheckMaDW && OpenOrders;
       
 //      Log("TrendingUp=" + TrendingUp);
 //      Log("CheckMaUp=" + CheckMaUp);
@@ -125,8 +121,18 @@ void OnTick() {
 //      Log("PriceUp=" + PriceUp);
 //      Log("GetMACurrentValue-ma0=" + GetMACurrentValue(Global_ma0, PERIOD_M1));
 //      Log("GetMACurrentValue-ma2=" + GetMACurrentValue(Global_ma2, PERIOD_M1));
+
+
+
+
+
+      //AllUP =  CheckMaUP && OpenOrders && EntryPointUP && CheckMASlUP;
+      //AllDW =  CheckMaDW && OpenOrders && EntryPointDW && CheckMASlD 
       
-      if( EntryPointUP && TrendingUP && CheckMaUP && OpenOrders) {
+      AllUP =  CheckMaUP && OpenOrders && EntryPointUP && CheckMASlUP;
+      AllDW =  CheckMaDW && OpenOrders && EntryPointDW && CheckMASlDW;
+            
+      if(AllUP) {
       
          double   buy_price   = 0;
          double   sell_price  = 0;
@@ -141,7 +147,7 @@ void OnTick() {
          OpenOrder(ORDER_TYPE_BUY);
       }
       
-      if( EntryPointDW && TrendingDW && CheckMaDW && OpenOrders) {
+      if(AllDW) {
       
          double   buy_price   = 0;
          double   sell_price  = 0;         
@@ -173,10 +179,16 @@ void OnTick() {
       EntryPointUP = false;      
     }
 
+   //if ( IsNewCandle(PERIOD_M15) ) {
+   //   Log("############-----------M5----------############");
+   //   MoveStopLossToParabolicSAR();
+   //   Log("-----------M5----------");
+   //}
+
    if ( IsNewCandle(PERIOD_M15) ) {
+      Log("M15 -- MoveStopLossToBreakEven ---------------------############");
       MoveStopLossToBreakEven();
+      Log("-----------M15----------");
    }
-
-
 }
 
