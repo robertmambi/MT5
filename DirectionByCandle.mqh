@@ -172,7 +172,7 @@
       double MA_indexC = GetMACurrentValue(ma_period, tf, indexC);
       double MA_indexP = GetMACurrentValue(ma_period, tf, indexP);
 
-      Log(strUPDW + " MA_indexC, MA_indexP, diff =" + DoubleToString(MA_indexC,2) +" | " + DoubleToString(MA_indexP,2) + " | " + DoubleToString((MA_indexC-MA_indexP),2) );
+      //Log(strUPDW + " MA_indexC, MA_indexP, diff =" + DoubleToString(MA_indexC,2) +" | " + DoubleToString(MA_indexP,2) + " | " + DoubleToString((MA_indexC-MA_indexP),2) );
 
       if(strUPDW == "UP") return ((MA_indexC-MA_indexP) > diff);
       if(strUPDW == "DW") return ((MA_indexP-MA_indexC) > diff);

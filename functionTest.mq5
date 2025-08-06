@@ -61,12 +61,6 @@ void OnTick() {
 
    OpenOrders   = false;
    
-//   TrendingUP   = false;
-//   CheckMaUP    = false;
-//
-//   TrendingDW   = false;
-//   CheckMaDW    = false;
-
    double OCHLopen  = 0;
    double OCHLclose = 0;
    double OCHLhigh  = 0;
@@ -77,27 +71,15 @@ void OnTick() {
    //UP    
    if (!EntryPointUP) {
       EntryPointUP =  ((OCHLlow-1) < GetMACurrentValue(Global_ma0, PERIOD_M5)) && (OCHLopen > OCHLclose);
-      
-      if(EntryPointUP) {
-         //BuySell=1;
-         Log("BuySell=1:Open/Close=" + DoubleToString(OCHLopen,2) + "/" + DoubleToString(OCHLclose,2));
-      }
      }
      
    //DW
    if (!EntryPointDW) {      
       EntryPointDW =    ((OCHLhigh+1) > GetMACurrentValue(Global_ma0, PERIOD_M5))
                     &&  (OCHLopen < OCHLclose);
-      if(EntryPointDW) {
-         //BuySell=2; 
-         Log("BuySell=2:Open/Close=" + DoubleToString(OCHLopen,2) + "/" + DoubleToString(OCHLclose,2));
-        }
    }
    
-    
-  
-
-      j++;
+   j++;
    
    if ( IsNewCandle(PERIOD_M1) ) {
    
@@ -110,25 +92,6 @@ void OnTick() {
       OpenOrders = (CountTrades() == 0);
 
 
-      //AllUP = EntryPointUP && TrendingUP && CheckMaUP && OpenOrders;
-      //AllDW = EntryPointDW && TrendingDW && CheckMaDW && OpenOrders;
-      
-//      Log("TrendingUp=" + TrendingUp);
-//      Log("CheckMaUp=" + CheckMaUp);
-//      Log("OpenOrders=" + OpenOrders);
-//      Log("BuySell=" + BuySell);
-//      
-//      Log("PriceUp=" + PriceUp);
-//      Log("GetMACurrentValue-ma0=" + GetMACurrentValue(Global_ma0, PERIOD_M1));
-//      Log("GetMACurrentValue-ma2=" + GetMACurrentValue(Global_ma2, PERIOD_M1));
-
-
-
-
-
-      //AllUP =  CheckMaUP && OpenOrders && EntryPointUP && CheckMASlUP;
-      //AllDW =  CheckMaDW && OpenOrders && EntryPointDW && CheckMASlD 
-      
       AllUP =  CheckMaUP && OpenOrders && EntryPointUP && CheckMASlUP;
       AllDW =  CheckMaDW && OpenOrders && EntryPointDW && CheckMASlDW;
             
@@ -162,6 +125,59 @@ void OnTick() {
          OpenOrder(ORDER_TYPE_SELL);
       }
 
+      BuySell = 0; 
+      EntryPointDW = false;
+      EntryPointUP = false;      
+    }
+
+
+   if ( IsNewCandle(PERIOD_M1) ) {
+      Log("M15 -- MoveStopLossToBreakEven ---------------------############");
+      MoveStopLossToBreakEven();
+      Log("-----------M15----------");
+   }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+         //BuySell=1;
+         //Log("BuySell=1:Open/Close=" + DoubleToString(OCHLopen,2) + "/" + DoubleToString(OCHLclose,2));
+
+
+         //BuySell=2; 
+         //Log("BuySell=2:Open/Close=" + DoubleToString(OCHLopen,2) + "/" + DoubleToString(OCHLclose,2));
+
+      //AllUP = EntryPointUP && TrendingUP && CheckMaUP && OpenOrders;
+      //AllDW = EntryPointDW && TrendingDW && CheckMaDW && OpenOrders;
+      
+//      Log("TrendingUp=" + TrendingUp);
+//      Log("CheckMaUp=" + CheckMaUp);
+//      Log("OpenOrders=" + OpenOrders);
+//      Log("BuySell=" + BuySell);
+//      
+//      Log("PriceUp=" + PriceUp);
+//      Log("GetMACurrentValue-ma0=" + GetMACurrentValue(Global_ma0, PERIOD_M1));
+//      Log("GetMACurrentValue-ma2=" + GetMACurrentValue(Global_ma2, PERIOD_M1));
+
+      //AllUP =  CheckMaUP && OpenOrders && EntryPointUP && CheckMASlUP;
+      //AllDW =  CheckMaDW && OpenOrders && EntryPointDW && CheckMASlD 
+
       //Log("Ticket = " + IntegerToString(j) + " M1-Loop=" + IntegerToString(x));
       //Log("CountTrades = " + IntegerToString(CountTrades()));
       //Log("BuySell = " + IntegerToString(BuySell));     
@@ -173,22 +189,11 @@ void OnTick() {
       //   + BoolToUpDown(IsTrending(_Symbol, PERIOD_M15)) + " "
       //   + BoolToUpDown(IsTrending(_Symbol, PERIOD_M30))
       //   );
-         
-      BuySell = 0; 
-      EntryPointDW = false;
-      EntryPointUP = false;      
-    }
-
+      
+      
+      
    //if ( IsNewCandle(PERIOD_M15) ) {
    //   Log("############-----------M5----------############");
    //   MoveStopLossToParabolicSAR();
    //   Log("-----------M5----------");
    //}
-
-   if ( IsNewCandle(PERIOD_M15) ) {
-      Log("M15 -- MoveStopLossToBreakEven ---------------------############");
-      MoveStopLossToBreakEven();
-      Log("-----------M15----------");
-   }
-}
-
