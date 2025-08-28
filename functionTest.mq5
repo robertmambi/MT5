@@ -15,14 +15,12 @@
 #include "AccountInfo.mqh"
 
 
-
-
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
 
 int OnInit() {
    Log("############################################################################");
-   Log("Version 2.0.6");
+   Log("Version 2.0.7");
    Log("############################################################################");
    OnInit_IsNewCandle();
    return(INIT_SUCCEEDED);
@@ -41,7 +39,7 @@ datetime TimeUP;
 //bool TrendingUP   = false;
 bool CheckMaUP    = false;
 bool CheckMASlUP  = false;
-static bool EntryPointUP = false;
+static bool EntryPointUP = true;
 
 // DW
 bool AllDW = false;
@@ -50,7 +48,7 @@ datetime TimeDW;
 //bool TrendingDW   = false;
 bool CheckMaDW    = false;
 bool CheckMASlDW  = false;
-static bool EntryPointDW = false;
+static bool EntryPointDW = true;
 
 // Both
 int BuySell = 0;
@@ -68,33 +66,41 @@ void OnTick() {
 
    GetCandleOCHL(PERIOD_M1,OCHLopen,OCHLclose,OCHLhigh,OCHLlow);
    
-   //UP    
-   if (!EntryPointUP) {
-      EntryPointUP =  ((OCHLlow-1) < GetMACurrentValue(Global_ma0, PERIOD_M5)) && (OCHLopen > OCHLclose);
-     }
-     
-   //DW
-   if (!EntryPointDW) {      
-      EntryPointDW =    ((OCHLhigh+1) > GetMACurrentValue(Global_ma0, PERIOD_M5))
-                    &&  (OCHLopen < OCHLclose);
-   }
+//   //UP    
+//   if (!EntryPointUP) {
+//      EntryPointUP =  ((OCHLlow-1) < GetMACurrentValue(Global_ma0, PERIOD_M5)) && (OCHLopen > OCHLclose);
+//     }
+//     
+//   //DW
+//   if (!EntryPointDW) {      
+//      EntryPointDW =  ((OCHLhigh+1) > GetMACurrentValue(Global_ma0, PERIOD_M5)) && (OCHLopen < OCHLclose);
+//   }
    
    j++;
    
-   if ( IsNewCandle(PERIOD_M1) ) {
+   //if ( IsNewCandle(PERIOD_M1) ) 
+   
+   {
    
       x++;   
       
       CheckMASlUP = CheckMASlope(20, PERIOD_M5, "UP",  0, 5, 1);
       CheckMASlDW = CheckMASlope(20, PERIOD_M5, "DW",  0, 5, 1);
-      CheckMaDW  =  CheckMAConditions(PERIOD_M5, "DW");
-      CheckMaUP  =  CheckMAConditions(PERIOD_M5, "UP");
+      
+      CheckMaDW  =  CheckMAConditions(PERIOD_M1, "DW") && CheckMAConditions(PERIOD_M5, "DW");
+      CheckMaUP  =  CheckMAConditions(PERIOD_M1, "UP") && CheckMAConditions(PERIOD_M5, "UP");
+      
       OpenOrders = (CountTrades() == 0);
 
 
       AllUP =  CheckMaUP && OpenOrders && EntryPointUP && CheckMASlUP;
       AllDW =  CheckMaDW && OpenOrders && EntryPointDW && CheckMASlDW;
-            
+
+      
+      if(AllUP) Log("AllUP= " + " " + BoolToString(CheckMaUP) + " " + BoolToString(OpenOrders) + " " + BoolToString(EntryPointUP) + " " + BoolToString(CheckMASlUP));
+      if(AllDW) Log("AllDW= " + " " + BoolToString(CheckMaDW) + " " + BoolToString(OpenOrders) + " " + BoolToString(EntryPointDW) + " " + BoolToString(CheckMASlDW));
+
+        
       if(AllUP) {
       
          double   buy_price   = 0;
@@ -126,15 +132,13 @@ void OnTick() {
       }
 
       BuySell = 0; 
-      EntryPointDW = false;
-      EntryPointUP = false;      
+      //EntryPointDW = false;
+      //EntryPointUP = false;      
     }
 
 
-   if ( IsNewCandle(PERIOD_M1) ) {
-      Log("M15 -- MoveStopLossToBreakEven ---------------------############");
+   if ( IsNewCandle(PERIOD_M15) ) {
       MoveStopLossToBreakEven();
-      Log("-----------M15----------");
    }
 }
 

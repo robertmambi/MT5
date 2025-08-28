@@ -39,7 +39,7 @@ void PlaceArrow(datetime time, double price, bool isBullish) {
 
    if(isBullish) {
       ObjectSetInteger(0, objName, OBJPROP_ARROWCODE, 233); // Up arrow
-      ObjectSetInteger(0, objName, OBJPROP_COLOR, clrMintCream);
+      ObjectSetInteger(0, objName, OBJPROP_COLOR, clrPaleGreen);
       ObjectSetDouble (0, objName, OBJPROP_PRICE, price + 10 * Point());
    } else {
       ObjectSetInteger(0, objName, OBJPROP_ARROWCODE, 234); // Down arrow

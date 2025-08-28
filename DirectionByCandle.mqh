@@ -1,55 +1,26 @@
-//
-//      Log("TrendStrength M1,M5,M15,M30 = " 
-//         + DoubleToString(TrendStrength(Symbol(), PERIOD_M1), 2)
-//         + "," + DoubleToString(TrendStrength(Symbol(), PERIOD_M5), 2)
-//         + "," + DoubleToString(TrendStrength(Symbol(), PERIOD_M15), 2)
-//         + "," + DoubleToString(TrendStrength(Symbol(), PERIOD_M30), 2)
-//         );
-//
-//      Log("IsTrendingUp  M1,M5,M15,M30 = " 
-//         + BoolToUpDown(IsTrendingUp(Symbol(), PERIOD_M1))
-//         + "," + BoolToUpDown(IsTrendingUp(Symbol(), PERIOD_M5))
-//         + "," + BoolToUpDown(IsTrendingUp(Symbol(), PERIOD_M15))
-//         + "," + BoolToUpDown(IsTrendingUp(Symbol(), PERIOD_M30))
-//         );
-//
-//      Log("TrendSlope    M1,M5,M15,M30 = " 
-//         + DoubleToString(TrendSlope(Symbol(), PERIOD_M1), 2)
-//         + "," + DoubleToString(TrendSlope(Symbol(), PERIOD_M5), 2)
-//         + "," + DoubleToString(TrendSlope(Symbol(), PERIOD_M15), 2)
-//         + "," + DoubleToString(TrendSlope(Symbol(), PERIOD_M30), 2)
-//         );
-//
-//      Log("MovingAverageSlope M1,M5,M15,M30 = " 
-//         + DoubleToString(MovingAverageSlope(Symbol(), PERIOD_M1), 2)
-//         + "," + DoubleToString(MovingAverageSlope(Symbol(), PERIOD_M5), 2)
-//         + "," + DoubleToString(MovingAverageSlope(Symbol(), PERIOD_M15), 2)
-//         + "," + DoubleToString(MovingAverageSlope(Symbol(), PERIOD_M30), 2)
-//         );
-//
-//      Log("CheckMAConditions  M1,M5,M15,M30 = " 
-//         + CheckMAConditions(Symbol(), PERIOD_M1)
-//         + "," + CheckMAConditions(Symbol(), PERIOD_M5)
-//         + "," + CheckMAConditions(Symbol(), PERIOD_M15)
-//         + "," + CheckMAConditions(Symbol(), PERIOD_M30)
-//         );
+
 
    //####################################################################
    
    #include "common.mqh";
 
-   int Global_ma0 = 20;
-   int Global_ma1 = 40;
-   int Global_ma2 = 80;
-   int Global_ma3 = 120;
-   int Global_ma4 = 240;
+   int Global_ma0 = 12;
+   int Global_ma1 = 20;
+   int Global_ma2 = 50;
+   int Global_ma3 = 100;
+   int Global_ma4 = 200;
    
    ENUM_TIMEFRAMES Global_tf = PERIOD_M5;
     
    ENUM_MA_METHOD GetMAMethod(int period) {
-      return MODE_SMA;
-      //if (period == Global_ma3) return MODE_LWMA;  // Use EMA for the longest period
-      //return MODE_EMA;  // Use LWMA for shorter periods
+      
+      switch (period) {
+
+         case Global_ma2: return MODE_EMA; 
+         case Global_ma3: return MODE_EMA;
+         case Global_ma4: return MODE_EMA;
+                  default: return MODE_SMA;
+      }
    }
 
    //####################################################################
@@ -57,7 +28,7 @@
    bool CheckMAConditions(ENUM_TIMEFRAMES tf,string strUPDW = NULL) {
 
    int periods[] = {Global_ma0, Global_ma1, Global_ma2, Global_ma3, Global_ma4};
-   double ma[5][2];  // [period index][0] for current, [1] for previous
+   double ma[5][3];  // [period index][0] for current, [1] for previous
 
    for (int i = 0; i < ArraySize(periods); i++)
    {
@@ -73,14 +44,15 @@
 
       double buffer[];
       ArraySetAsSeries(buffer, true);
-      if (CopyBuffer(maHandle, 0, 0, 2, buffer) != 2)
+      if (CopyBuffer(maHandle, 0, 0, 5, buffer) != 5)
       {
          Print("Error copying MA buffer for period ", periods[i], ": ", GetLastError());
          return false;
       }
 
-      ma[i][0] = buffer[0];  // current
-      ma[i][1] = buffer[1];  // previous
+      ma[i][0] = buffer[0];  // C  = current
+      ma[i][1] = buffer[1];  // P  = previous
+      ma[i][2] = buffer[4];  // Px = previous 5 Candle back
 
       // Free the indicator handle to avoid resource leaks
       IndicatorRelease(maHandle);
@@ -99,19 +71,80 @@
    double MA3P = ma[3][1];
    double MA4P = ma[4][1];
 
-      if      ((MA4C < MA3C) 
+   double MA0Px = ma[0][2];
+   double MA1Px = ma[1][2];
+   double MA2Px = ma[2][2];
+   double MA3Px = ma[3][2];
+   double MA4Px = ma[4][2];
+   
+   double D0CPx = NormalizeDouble(MA0C-MA0Px,2);
+   double D1CPx = NormalizeDouble(MA1C-MA1Px,2);
+   double D2CPx = NormalizeDouble(MA2C-MA2Px,2);
+   double D3CPx = NormalizeDouble(MA3C-MA3Px,2);
+   double D4CPx = NormalizeDouble(MA4C-MA4Px,2);
+   
+   bool DeltaUP = false;
+   bool DeltaDW = false;
+   
+      if(tf == PERIOD_M1) {
+      DeltaUP =(D0CPx > 1.50)
+            && (D1CPx > 1.25)
+            && (D2CPx > 0.40)
+            && (D3CPx > 0.25)
+            && (D4CPx > 0.10);
+            
+      DeltaDW =(D0CPx < -1.50)
+            && (D1CPx < -1.25)
+            && (D2CPx < -0.40)
+            && (D3CPx < -0.25)
+            && (D4CPx < -0.10);
+   } 
+   else if(tf == PERIOD_M5) {
+      DeltaUP =(D0CPx > 1.50)
+            && (D1CPx > 1.50)
+            && (D2CPx > 1.25)
+            && (D3CPx > 0.40)
+            && (D4CPx > 0.15);
+            
+      DeltaDW =(D0CPx < -1.50)
+            && (D1CPx < -1.50)
+            && (D2CPx < -1.25)
+            && (D3CPx < -0.40)
+            && (D4CPx < -0.15);
+   }
+   
+   
+
+   
+   
+      if      (
+               // 5<4<3<2<1
+               (MA4C < MA3C) 
             && (MA3C < MA2C) 
             && (MA2C < MA1C) 
             && (MA1C < MA0C)
             
+            //10<5  9<4  8<3  7<2  6<1
             && (MA4P < MA4C) 
             && (MA3P < MA3C) 
             && (MA2P < MA2C) 
             && (MA1P < MA1C) 
             && (MA0P < MA0C) 
+
+            //15<10  14<9  13<8  12<7  11<6
+            && (MA4Px < MA4P) 
+            && (MA3Px < MA3P) 
+            && (MA2Px < MA2P) 
+            && (MA1Px < MA1P) 
+            && (MA0Px < MA0P) 
             
+            && DeltaUP
+             
             && (strUPDW == "UP")
-         ) return true;
+         ) {
+         //   Log(EnumToString(tf) + " UP-D0CPx-D4CPx= "+DoubleToString(D0CPx,2)+"  "+DoubleToString(D1CPx,2)+"  "+DoubleToString(D2CPx,2)+"  "+DoubleToString(D3CPx,2)+"  "+DoubleToString(D4CPx,2)+"  ");
+            return true;
+           }
      
       else if ((MA4C > MA3C) 
             && (MA3C > MA2C) 
@@ -123,10 +156,20 @@
             && (MA2P > MA2C) 
             && (MA1P > MA1C) 
             && (MA0P > MA0C)
+
+            && (MA4Px > MA4P) 
+            && (MA3Px > MA3P) 
+            && (MA2Px > MA2P) 
+            && (MA1Px > MA1P) 
+            && (MA0Px > MA0P) 
+
+            && DeltaDW
             
             && (strUPDW == "DW")
-        )
-      return true;
+        ) {
+        //   Log(EnumToString(tf) + " DW-D0CPx-D4CPx= "+DoubleToString(D0CPx,2)+"  "+DoubleToString(D1CPx,2)+"  "+DoubleToString(D2CPx,2)+"  "+DoubleToString(D3CPx,2)+"  "+DoubleToString(D4CPx,2)+"  ");
+           return true;
+          }
    
    
    
